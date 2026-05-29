@@ -200,6 +200,10 @@ h1 {
   font-size: 0.7rem;
 }
 
+.mobile-step-label {
+  display: none;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(340px, 0.9fr) minmax(430px, 1.1fr);
@@ -718,6 +722,46 @@ textarea:focus {
 
 .setup-fields .field {
   margin-bottom: 0;
+}
+
+.example-prompt-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  max-width: 900px;
+  margin-bottom: 28px;
+  border-left: 4px solid #1c3f35;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(238, 248, 242, 0.92), rgba(255, 252, 244, 0.9)),
+    #f7fbf6;
+  padding: 18px 20px;
+  box-shadow: 0 16px 36px rgba(54, 51, 39, 0.08);
+}
+
+.example-prompt-card span {
+  display: block;
+  margin-bottom: 6px;
+  color: #1c6a55;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.example-prompt-card h3 {
+  margin: 0 0 4px;
+  color: #13261e;
+  font-size: clamp(1.08rem, 2vw, 1.32rem);
+  line-height: 1.18;
+}
+
+.example-prompt-card p {
+  max-width: 560px;
+  margin: 0;
+  color: #53645b;
+  font-size: 0.94rem;
 }
 
 .reality-reminder-card {
@@ -2078,10 +2122,52 @@ input[type="file"] {
 
   .two-column,
   .output-title-row,
-  .colour-grid,
-  .flow-strip {
+  .colour-grid {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .flow-strip {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .flow-strip button {
+    min-height: 40px;
+    gap: 0;
+    font-size: 0;
+  }
+
+  .flow-strip strong {
+    width: 24px;
+    height: 24px;
+    font-size: 0.78rem;
+  }
+
+  .flow-strip button.active {
+    box-shadow: inset 0 -2px 0 #1c3f35;
+  }
+
+  .mobile-step-label {
+    display: block;
+    margin: 0;
+    border-top: 1px solid rgba(36, 58, 48, 0.08);
+    background: rgba(250, 247, 239, 0.72);
+    padding: 9px 12px 10px;
+    color: #344139;
+    font-size: 0.82rem;
+    font-weight: 850;
+    text-align: center;
+  }
+
+  .example-prompt-card {
+    grid-template-columns: 1fr;
+    margin-bottom: 22px;
+    padding: 16px;
+  }
+
+  .example-prompt-card .copy-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .section-nav {

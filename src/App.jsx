@@ -242,10 +242,10 @@ const visualTemplates = {
 
 const initialVisual = {
   template: "square",
-  headline: "Broken street lights near the station",
-  subhead: "Residents have told me this stretch feels unsafe after dark.",
-  priorities: "Safer crossings, working lights, clear repair times",
-  callToAction: "Tell me where else this is happening",
+  headline: "",
+  subhead: "",
+  priorities: "",
+  callToAction: "",
   primaryColor: "#1c3f35",
   backgroundColor: "#fffdf8",
   imageData: "",
@@ -304,7 +304,26 @@ const workflowSteps = [
   { id: "visuals-assets", number: 5, label: "Add photos" },
 ];
 
-const initialBrief = {
+const blankBrief = {
+  candidateName: "",
+  ward: "",
+  party: "",
+  issue: "",
+  localExample: "",
+  whoAffected: "",
+  whyItMatters: "",
+  practicalNextStep: "",
+  callToAction: "",
+  tone: "neighbourly",
+  format: "Facebook post",
+  avoid: "",
+  imprintReminder: "",
+  profile: defaultProfile,
+  templateId: contentTemplates[0].id,
+};
+
+const sampleBrief = {
+  ...blankBrief,
   candidateName: "Sam Taylor",
   ward: "Riverside",
   party: "Conservative",
@@ -315,13 +334,21 @@ const initialBrief = {
   whyItMatters: "It changes whether people feel comfortable walking that route in the evening.",
   practicalNextStep: "Ask for the repair history, the responsible team, and a clear timescale.",
   callToAction: "Send me the exact location and when you noticed it",
-  tone: "neighbourly",
-  format: "Facebook post",
   avoid: "party slogans, council-report wording, fake outrage",
   imprintReminder: "Promoted by Sam Taylor, Riverside Community Campaign.",
-  profile: defaultProfile,
-  templateId: contentTemplates[0].id,
 };
+
+const initialBrief = blankBrief;
+
+function hasStarterDetails(brief) {
+  return Boolean(
+    brief.candidateName?.trim() ||
+      brief.ward?.trim() ||
+      brief.party?.trim() ||
+      brief.issue?.trim() ||
+      brief.localExample?.trim(),
+  );
+}
 
 function makeHooks(brief) {
   const place = brief.ward || "our area";
@@ -663,9 +690,9 @@ function Field({ label, children }) {
 }
 
 function buildVoiceSummary(brief) {
-  const ward = brief.ward || "this ward";
-  const tone = brief.tone || "plain";
-  const issue = brief.issue || "the issue";
+  const ward = brief.ward || "Not set yet";
+  const tone = brief.tone || "neighbourly";
+  const issue = brief.issue || "No issue yet";
   const profile = brief.profile || defaultProfile;
   const risk = profile.politicalRiskNotes || "";
   const riskText = risk.toLowerCase();
@@ -673,6 +700,7 @@ function buildVoiceSummary(brief) {
   const needsFirmness = riskText.includes("reform") || riskText.includes("angry") || riskText.includes("tribal");
   const needsPlainness = `${profile.preferredWordingStyle} ${profile.phrasesToAvoid}`.toLowerCase().includes("plain");
   const hasLocalExample = Boolean(brief.localExample?.trim());
+  const hasIssue = Boolean(brief.issue?.trim());
   const toneDescription = toneDescriptions[tone] || "plain and useful";
   const nextMove =
     brief.callToAction?.trim() ||
@@ -685,7 +713,9 @@ function buildVoiceSummary(brief) {
     ward,
     issue,
     tone: `${toneLabel}${needsPlainness ? ", plain English" : ""}`,
-    reminder: needsFirmness
+    reminder: !hasIssue
+      ? "Start with a real place, a real problem, and one thing that can be checked."
+      : needsFirmness
       ? "Keep it local. Do not turn frustration into a row. Stick to what can be checked or chased."
       : "Stick to what can be checked, chased, or reported. Do not make it bigger than it is.",
   };
@@ -716,6 +746,21 @@ function EmotionalAnchor({ brief }) {
         </div>
       </dl>
     </article>
+  );
+}
+
+function ExamplePrompt({ onLoad }) {
+  return (
+    <aside className="example-prompt-card" aria-label="Try an example">
+      <div>
+        <span>Try an example</span>
+        <h3>Want to see how Post Desk works?</h3>
+        <p>Load a sample local issue, then follow the same steps as you would with your own post.</p>
+      </div>
+      <button className="copy-button" type="button" onClick={onLoad}>
+        Load example
+      </button>
+    </aside>
   );
 }
 
@@ -1877,13 +1922,43 @@ function ImagePicker({ brief, images, onChoose }) {
 function VisualTemplateGenerator({ brief, images }) {
   const [visual, setVisual] = React.useState(() => ({
     ...initialVisual,
-    headline: initialBrief.issue,
-    subhead: initialBrief.localExample,
+    headline: brief.issue || "",
+    subhead: brief.localExample || "",
+    callToAction: brief.callToAction || "",
   }));
   const [exportNote, setExportNote] = React.useState("");
+  const previousBriefVisual = React.useRef({
+    issue: brief.issue || "",
+    localExample: brief.localExample || "",
+    callToAction: brief.callToAction || "",
+  });
   const template = visualTemplates[visual.template] || visualTemplates.square;
   const svg = buildVisualSvg(brief, visual);
   const filenameBase = `local-voice-${(brief.ward || "local").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${visual.template}`;
+
+  React.useEffect(() => {
+    const previous = previousBriefVisual.current;
+    setVisual((current) => ({
+      ...current,
+      headline:
+        !current.headline || current.headline === previous.issue
+          ? brief.issue || ""
+          : current.headline,
+      subhead:
+        !current.subhead || current.subhead === previous.localExample
+          ? brief.localExample || ""
+          : current.subhead,
+      callToAction:
+        !current.callToAction || current.callToAction === previous.callToAction
+          ? brief.callToAction || ""
+          : current.callToAction,
+    }));
+    previousBriefVisual.current = {
+      issue: brief.issue || "",
+      localExample: brief.localExample || "",
+      callToAction: brief.callToAction || "",
+    };
+  }, [brief.issue, brief.localExample, brief.callToAction]);
 
   function updateVisual(field, value) {
     setVisual((current) => ({ ...current, [field]: value }));
@@ -2300,6 +2375,30 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function startNewDraft() {
+    setBrief(initialBrief);
+    setDraft(generateDraft(initialBrief));
+    setCopied("");
+    setCheckedCompliance({});
+    setGenerationNote("");
+    setActiveStep("candidate-setup");
+  }
+
+  function loadExampleBrief() {
+    setBrief(sampleBrief);
+    setDraft(generateDraft(sampleBrief));
+    setCopied("Example loaded");
+    setCheckedCompliance({});
+    setGenerationNote("");
+    setActiveStep("issue-briefing");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.setTimeout(() => setCopied(""), 1600);
+  }
+
+  const activeWorkflowStep =
+    workflowSteps.find((step) => step.id === activeStep) || workflowSteps[0];
+  const showExamplePrompt = !hasStarterDetails(brief);
+
   return (
     <main className="app-shell">
       <header className="desk-masthead">
@@ -2315,15 +2414,9 @@ function App() {
             <button
               className="secondary-button"
               type="button"
-              onClick={() => {
-                setBrief(initialBrief);
-                setDraft(generateDraft(initialBrief));
-                setCopied("");
-                setCheckedCompliance({});
-              setGenerationNote("");
-              }}
+              onClick={startNewDraft}
             >
-              New draft
+              Start over
             </button>
           </div>
         </div>
@@ -2340,12 +2433,16 @@ function App() {
               type="button"
               onClick={() => changeStep(step.id)}
               aria-current={activeStep === step.id ? "step" : undefined}
+              data-label={step.label}
             >
               <strong>{step.number}</strong>
               {step.label}
             </button>
           ))}
         </nav>
+        <p className="mobile-step-label">
+          Step {activeWorkflowStep.number}: {activeWorkflowStep.label}
+        </p>
       </header>
 
       <form className="editor-flow" onSubmit={regenerate}>
@@ -2355,6 +2452,8 @@ function App() {
             <h2>Stay local</h2>
             <p>Set the basics, then keep the post grounded in what can be checked.</p>
           </div>
+
+          {showExamplePrompt && <ExamplePrompt onLoad={loadExampleBrief} />}
 
           <div className="setup-brief">
             <div className="setup-fields">
