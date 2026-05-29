@@ -723,10 +723,25 @@ function buildVoiceSummary(brief) {
 
 function EmotionalAnchor({ brief }) {
   const summary = buildVoiceSummary(brief);
+  const hasBriefInfo = Boolean(brief.ward?.trim() || brief.issue?.trim());
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (hasBriefInfo) {
+      setIsOpen(true);
+    }
+  }, [hasBriefInfo]);
 
   return (
-    <article className="emotional-anchor">
-      <span>{summary.kicker}</span>
+    <details
+      className="emotional-anchor brief-collapsible"
+      open={isOpen}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
+      <summary>
+        <span>{summary.kicker}</span>
+        <small>{hasBriefInfo ? "View current notes" : "Open once you have something to summarise"}</small>
+      </summary>
       <dl className="working-note-list">
         <div>
           <dt>Ward</dt>
@@ -745,7 +760,7 @@ function EmotionalAnchor({ brief }) {
           <dd>{summary.reminder}</dd>
         </div>
       </dl>
-    </article>
+    </details>
   );
 }
 
@@ -2404,7 +2419,10 @@ function App() {
       <header className="desk-masthead">
         <div className="topbar">
           <div className="topbar-main">
-            <p className="eyebrow">Local Voice Studio</p>
+            <p className="eyebrow brand-kicker">
+              <img src="./assets/post-desk-logo.png" alt="" aria-hidden="true" />
+              <span>Local Voice Studio</span>
+            </p>
             <h1>Post desk</h1>
             <p className="lede">
               Ground the issue before you write.
@@ -2458,8 +2476,9 @@ function App() {
           <div className="setup-brief">
             <div className="setup-fields">
               <div className="two-column">
-                <Field label="Candidate name">
+                <Field label="Name for post perspective (optional)">
                   <input value={brief.candidateName} onChange={(event) => updateBrief("candidateName", event.target.value)} />
+                  <small className="field-hint">Used only for first-person wording and imprint examples.</small>
                 </Field>
                 <Field label="Ward">
                   <input value={brief.ward} onChange={(event) => updateBrief("ward", event.target.value)} />
@@ -2481,32 +2500,30 @@ function App() {
                 </Field>
               </div>
             </div>
-            <aside className="reality-reminder-card">
-              <strong>Before you write</strong>
-              <p>Do not make the issue bigger than the evidence.</p>
-              <span>Place. Problem. What can be chased.</span>
-            </aside>
           </div>
 
-          <details className="advanced-details setup-notes-details" open>
-            <summary>Wording notes</summary>
-            <div className="setup-notes-grid">
-              <article className="setup-note-card sounds-natural-card">
-                <span>Sounds natural</span>
-                <p>“{brief.profile.naturalPhrases}”</p>
-              </article>
-              <label className="setup-note-card avoid-wording-card">
-                <span>Avoid wording</span>
-                <textarea value={brief.profile.phrasesToAvoid || ""} onChange={(event) => updateProfile("phrasesToAvoid", event.target.value)} />
-              </label>
-              <label className="setup-note-card preferred-style-card">
-                <span>Preferred wording style</span>
-                <textarea value={brief.profile.preferredWordingStyle} onChange={(event) => updateProfile("preferredWordingStyle", event.target.value)} />
-              </label>
-            </div>
-          </details>
-
           <StepControls activeStep={activeStep} onStepChange={changeStep} />
+
+          <aside className="reality-reminder-card">
+            <strong>Before you write</strong>
+            <p>Do not make the issue bigger than the evidence.</p>
+            <span>Place. Problem. What can be chased.</span>
+          </aside>
+
+          <div className="setup-notes-details" aria-label="Wording notes">
+            <details className="setup-note-accordion sounds-natural-card">
+              <summary>Sounds natural</summary>
+              <p>“{brief.profile.naturalPhrases}”</p>
+            </details>
+            <details className="setup-note-accordion avoid-wording-card">
+              <summary>Avoid wording</summary>
+              <textarea value={brief.profile.phrasesToAvoid || ""} onChange={(event) => updateProfile("phrasesToAvoid", event.target.value)} />
+            </details>
+            <details className="setup-note-accordion preferred-style-card">
+              <summary>Preferred wording style</summary>
+              <textarea value={brief.profile.preferredWordingStyle} onChange={(event) => updateProfile("preferredWordingStyle", event.target.value)} />
+            </details>
+          </div>
         </section>
 
         <section className="panel workflow-section" id="issue-briefing" hidden={activeStep !== "issue-briefing"}>
