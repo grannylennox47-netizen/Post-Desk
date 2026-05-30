@@ -353,7 +353,6 @@ function hasStarterDetails(brief) {
 function makeHooks(brief) {
   const place = brief.ward || "our area";
   const issue = brief.issue || "this local issue";
-  const example = brief.localExample || "residents have raised it with me";
 
   return [
     {
@@ -465,7 +464,7 @@ function makeShorterText(brief, sourceText) {
   const issue = brief.issue || "this local issue";
   const ward = brief.ward || "our area";
   const example =
-    brief.localExample || "Residents have raised it because it is affecting daily life.";
+    brief.localExample || "[add what has been seen or reported]";
   const imprint = brief.imprintReminder || "Check imprint before publishing.";
 
   return antiWaffleText(
@@ -477,11 +476,11 @@ function makeReplyToComment(brief) {
   const ward = brief.ward || "the area";
   const issue = brief.issue || "this";
   const example =
-    brief.localExample || "I have heard similar concerns from residents.";
+    brief.localExample || "[add the specific concern raised in the comment]";
   const imprint = brief.imprintReminder || "Check imprint before publishing.";
 
   return antiWaffleText(
-    `Thanks for raising this. I have heard similar concerns in ${ward} about ${issue}.\n\n${example}\n\nI do not want to turn it into a party row. The useful thing is to get the exact details and ask the responsible team for a clear answer.\n\nIf you can, send me the exact spot and whether it has already been reported.\n\nImprint reminder: ${imprint}`,
+    `Thanks for raising this. I want to get the details right before saying more about ${issue} in ${ward}.\n\n${example}\n\nI do not want to turn it into a party row. The useful thing is to get the exact details and ask the responsible team for a clear answer.\n\nIf you can, send me the exact spot and whether it has already been reported.\n\nImprint reminder: ${imprint}`,
   );
 }
 
@@ -530,7 +529,7 @@ function humaniseText(brief, sourceText) {
   const issue = brief.issue || "this";
   const example =
     brief.localExample ||
-    "People have raised it because it is affecting day-to-day life.";
+    "[add what has been seen or reported]";
   const imprint = brief.imprintReminder || "Check imprint before publishing.";
 
   const cleaned = stripBannedPhrases(sourceText)
@@ -557,7 +556,7 @@ function humaniseText(brief, sourceText) {
 
   if (brief.format === "reply to comment") {
     return antiWaffleText(
-      `Thanks for raising this. I have heard the same concern in ${ward}.\n\n${example}\n\nI do not want to turn it into a party row. I want the details, then I want it sorted.\n\nIf you can, send me the exact spot.\n\n${imprintLine}`,
+      `Thanks for raising this. I want to get the details right before saying more.\n\n${example}\n\nI do not want to turn it into a party row. I want the details, then I want it sorted.\n\nIf you can, send me the exact spot.\n\n${imprintLine}`,
     );
   }
 
@@ -568,7 +567,7 @@ function humaniseText(brief, sourceText) {
   }
 
   return antiWaffleText(
-    `People have told me in ${ward} about ${issue}.\n\n${example}\n\nI do not want to turn this into a party row. I want it checked and sorted.\n\nIf you have seen it too, tell me where.\n\n${imprintLine}`,
+    `A local issue to check in ${ward}: ${issue}.\n\n${example}\n\nI do not want to turn this into a party row. I want it checked and sorted.\n\nIf you have seen it too, tell me where.\n\n${imprintLine}`,
   );
 }
 
@@ -579,12 +578,12 @@ function generateTemplateDraft(brief, context) {
     "councillor-powers": `A councillor cannot personally fix every local problem. But they can report it, chase the right team, ask for a clear timescale, and keep residents updated.\n\nOn ${issue} in ${ward}, I am asking for three things: what has already been reported, who is responsible for the fix, and when residents can expect an answer.\n\n${example}\n\nIf you know another example nearby, send me the exact location.\n\nImprint reminder: ${imprint}`,
     "issue-explainer": `${issue} in ${ward} is not just a line on a report.\n\n${example}\n\nThe practical question is simple: who is responsible, what has been reported, and when will it be fixed?\n\nI am asking for those answers and will share what I hear back.\n\nImprint reminder: ${imprint}`,
     "thanking-endorser": `Thank you to everyone in ${ward} who has taken the time to speak to me and offer support.\n\nThe point that keeps coming up is simple: people want the basics done well. ${issue} is one example.\n\n${example}\n\nI am grateful for the encouragement, and I will keep focusing on practical local issues.\n\nImprint reminder: ${imprint}`,
-    "responding-criticism": `A few people have asked why ${issue} has not been sorted sooner. That is a fair question.\n\n${example}\n\nI am not interested in pretending this is simple if it is not. I am asking for the facts, the timescale, and who is responsible for the next step.\n\nResidents deserve a straight answer.\n\nImprint reminder: ${imprint}`,
-    "doorstep-update": `Good conversations in ${ward} this week.\n\nThe issue that came up most was ${issue}.\n\n${example}\n\nI am going to raise this and report back when I have an update. If it is affecting your street too, send me the details.\n\nImprint reminder: ${imprint}`,
+    "responding-criticism": `A fair question about ${issue}: what has happened so far, and what can be checked next?\n\n${example}\n\nI am not interested in pretending this is simple if it is not. I am asking for the facts, the timescale, and who is responsible for the next step.\n\nPeople deserve a straight answer.\n\nImprint reminder: ${imprint}`,
+    "doorstep-update": `A local issue to check in ${ward}: ${issue}.\n\n${example}\n\nI am going to raise this and report back when I have an update. If it is affecting your street too, send me the details.\n\nImprint reminder: ${imprint}`,
     "community-event": `I will be out in ${ward} speaking with residents about local issues, including ${issue}.\n\nNo speeches and no appointment needed. Just come over if there is something you want to raise.\n\n${example}\n\nI am especially keen to hear practical details: the exact place, when it happens, and what has already been reported.\n\nImprint reminder: ${imprint}`,
     "myth-vs-reality": `Myth: Nothing can be done about ${issue}.\n\nReality: It can be reported, chased, checked, and kept on the agenda until residents get a proper answer.\n\nLocal example: ${example}\n\nThe useful thing is to be specific. Send the exact location, any dates, and what you have already been told.\n\nImprint reminder: ${imprint}`,
-    "before-after": `Before: residents in ${ward} raised ${issue}.\n\nWhat we know: ${example}\n\nAfter: this is the part I want to update clearly. Has it been fixed, partly fixed, or ignored?\n\nIf you have seen a change on the ground, good or bad, send me the details so I can follow it up properly.\n\nImprint reminder: ${imprint}`,
-    "calm-opponent-challenge": `I understand why people are frustrated about ${issue}. I am frustrated too.\n\nBut residents deserve more than slogans.\n\nThe question is simple: what has been reported, who is responsible, and when will people in ${ward} get an answer?\n\nI am happy to work with anyone who wants to get that sorted.\n\nImprint reminder: ${imprint}`,
+    "before-after": `Before: ${issue} in ${ward}.\n\nWhat we know: ${example}\n\nAfter: this is the part I want to update clearly. Has it been fixed, partly fixed, or left as it was?\n\nIf you have seen a change on the ground, good or bad, send me the details so I can follow it up properly.\n\nImprint reminder: ${imprint}`,
+    "calm-opponent-challenge": `${issue} needs a clear answer without turning it into a row.\n\nThe question is simple: what has been reported, who is responsible, and when will people in ${ward} get an answer?\n\nI am happy to work with anyone who wants to get that sorted.\n\nImprint reminder: ${imprint}`,
     "reel-hook-body-close": `Hook: "If you live in ${ward}, you may already know this problem."\n\nBody: "${issue}. ${example} I am ${name}, your ${partyLine}, and I am asking for a clear, practical answer."\n\nClose: "Tell me where else I should check, and I will keep raising it."\n\nImprint reminder: ${imprint}`,
   };
 
@@ -599,7 +598,7 @@ function generateDraft(brief) {
   const example =
     [
       brief.localExample ||
-        "People have raised this with me because it is affecting day-to-day life.",
+        "[add what has been seen or reported]",
       brief.whoAffected ? `Who is affected: ${brief.whoAffected}` : "",
       brief.whyItMatters ? `Why it matters locally: ${brief.whyItMatters}` : "",
       brief.practicalNextStep ? `Practical next step: ${brief.practicalNextStep}` : "",
@@ -629,10 +628,10 @@ function generateDraft(brief) {
     contentTemplates.find((template) => template.id === brief.templateId) || contentTemplates[0];
 
   const base = {
-    "Facebook post": `I have been hearing from people in ${ward} about ${issue}.\n\n${example}\n\nI am ${name}, standing as a ${partyLine}. ${localStance}\n\n${audienceLine} ${qualitiesLine} ${avoidLine} ${wordingLine} This needs checking properly and sorting sensibly.\n\nIf this is affecting you too, tell me where and when you have seen it. Local examples help make the case stronger.\n\nImprint reminder: ${imprint}`,
+    "Facebook post": `A local issue to check in ${ward}: ${issue}.\n\n${example}\n\nI am ${name}, standing as a ${partyLine}. ${localStance}\n\n${avoidLine} ${wordingLine} This needs checking properly and sorting sensibly.\n\nIf this is affecting you too, tell me where and when you have seen it. Local examples help make the case stronger.\n\nImprint reminder: ${imprint}`,
     "reel script": `Opening: "If you use this part of ${ward}, you may already know the problem."\n\nShot 1: Stand near the location and name the issue: ${issue}.\n\nShot 2: Use the local example: ${example}\n\nShot 3: "I am ${name}, your ${partyLine}. I am focused on practical local issues, not political shouting."\n\nShot 4: "${audienceLine} The answer is to listen, check the details, and get it sorted."\n\nClose: "Comment or message me with the places I should check next."\n\nImprint reminder: ${imprint}`,
-    caption: `${issue} in ${ward} is not just a line on a report. ${example} ${audienceLine} I am focused on practical local answers, not shouting matches. If you have seen the same thing nearby, send me the details so I can keep pushing for a fix.\n\nImprint reminder: ${imprint}`,
-    "reply to comment": `Thanks for raising this. I have heard similar concerns in ${ward}, especially around ${issue}. ${example}\n\n${avoidLine} ${audienceLine} The useful thing is to get the details right and press for a sensible answer.\n\nIf you are happy to, send me the exact spot and time it tends to happen. Specific examples make a real difference.\n\nImprint reminder: ${imprint}`,
+    caption: `${issue} in ${ward} needs a clear answer. ${example} I am focused on practical local answers, not shouting matches. If you have seen the same thing nearby, send me the details so I can keep pushing for a fix.\n\nImprint reminder: ${imprint}`,
+    "reply to comment": `Thanks for raising this. I want to get the details right before saying more about ${issue} in ${ward}. ${example}\n\n${avoidLine} The useful thing is to get the details right and press for a sensible answer.\n\nIf you are happy to, send me the exact spot and time it tends to happen. Specific examples make a real difference.\n\nImprint reminder: ${imprint}`,
   };
 
   const templateDraft = generateTemplateDraft(brief, {
@@ -825,6 +824,104 @@ function GroundingCheck({ brief }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function assessDraftGrounding(brief) {
+  const issue = (brief.issue || "").trim();
+  const localExample = (brief.localExample || "").trim();
+  const practicalNextStep = (brief.practicalNextStep || "").trim();
+  const callToAction = (brief.callToAction || "").trim();
+  const combined = `${issue} ${localExample}`.toLowerCase();
+  const placePattern =
+    /\b(near|outside|opposite|beside|by|at|around|next to|junction|road|street|station|school|park|library|market|crossing|estate|avenue|lane|close|drive|high street|square|hall|stop|ward)\b/i;
+  const localServicePattern =
+    /\b(bin|rubbish|litter|fly.?tip|pothole|road|pavement|street light|lighting|crossing|traffic|parking|bus stop|bus|library|park|playground|drain|flood|graffiti|antisocial|anti-social|speeding|police|nhs|gp|doctor|hospital|school|housing|landlord|utility|council|highways|authority|service|team)\b/i;
+  const evidencePattern =
+    /\b(report|reported|reference|incident|near miss|complaint|photo|residents?|parents?|commuters?|businesses?|noticed|seen|sent|this month|this week|since|after \d|before \d|\d+)\b/i;
+  const generalOpinionPattern =
+    /\b(i think|nowadays|society|people spend too much time|everyone|always|never|these days|in general)\b/i;
+  const actionPattern =
+    /\b(check|chase|report|request|ask|inspect|inspection|repair|review|timescale|date|reference|update|enforce|clear|clean|replace|fix)\b/i;
+
+  const hasPlace = placePattern.test(combined);
+  const hasEvidence =
+    localExample.length >= 24 || evidencePattern.test(combined);
+  const hasSpecificProblem =
+    issue.length >= 8 &&
+    !(
+      generalOpinionPattern.test(issue) &&
+      !hasPlace &&
+      !localServicePattern.test(issue) &&
+      !hasEvidence
+    ) &&
+    (hasPlace || localServicePattern.test(combined) || hasEvidence);
+  const hasResponsibleRoute =
+    localServicePattern.test(combined) ||
+    /\b(council|police|nhs|landlord|utility|authority|service|team|organisation|highways)\b/i.test(
+      practicalNextStep,
+    );
+  const hasPracticalAction =
+    actionPattern.test(`${practicalNextStep} ${callToAction}`) ||
+    (hasEvidence && localServicePattern.test(combined));
+
+  const checks = [
+    {
+      label: "A specific place",
+      ok: hasPlace,
+    },
+    {
+      label: "A specific local problem",
+      ok: hasSpecificProblem,
+    },
+    {
+      label: "Evidence or reported incidents",
+      ok: hasEvidence,
+    },
+    {
+      label: "A council service or organisation responsible",
+      ok: hasResponsibleRoute,
+    },
+    {
+      label: "A practical action that could be requested",
+      ok: hasPracticalAction,
+    },
+  ];
+
+  return {
+    passed: checks.every((check) => check.ok),
+    checks,
+  };
+}
+
+function DraftGroundingGate({ result }) {
+  return (
+    <section className="draft-grounding-gate" aria-label="Grounding check">
+      <p className="gate-kicker">Grounding check</p>
+      <h3>⚠ This looks more like a general opinion than a local issue.</h3>
+      <p>Post Desk cannot identify:</p>
+      <ul>
+        {result.checks.map((check) => (
+          <li className={check.ok ? "ok" : ""} key={check.label}>
+            <span>{check.ok ? "✓" : "□"}</span>
+            {check.label}
+          </li>
+        ))}
+      </ul>
+      <p className="gate-close">
+        Please add more detail before drafting. It is fine not to write the post yet.
+      </p>
+    </section>
+  );
+}
+
+function DraftWaitingPanel() {
+  return (
+    <section className="draft-waiting-panel" aria-label="Draft waiting">
+      <p className="gate-kicker">Draft area</p>
+      <h3>Your grounded draft will appear here.</h3>
+      <p>Start with the local facts. Post Desk will only write once the issue holds up.</p>
+    </section>
   );
 }
 
@@ -2281,6 +2378,8 @@ function App() {
   const [checkedCompliance, setCheckedCompliance] = React.useState({});
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [generationNote, setGenerationNote] = React.useState("");
+  const [draftGroundingResult, setDraftGroundingResult] = React.useState(null);
+  const [hasGeneratedDraft, setHasGeneratedDraft] = React.useState(false);
   const [savedDrafts, setSavedDrafts] = React.useState(() => loadLocalDrafts());
   const [imageLibrary, setImageLibrary] = React.useState(() => loadImageLibrary());
   const [activeStep, setActiveStep] = React.useState("candidate-setup");
@@ -2290,6 +2389,8 @@ function App() {
 
   function updateBrief(field, value) {
     setBrief((current) => ({ ...current, [field]: value }));
+    setDraftGroundingResult(null);
+    setHasGeneratedDraft(false);
   }
 
   function updateProfile(field, value) {
@@ -2304,17 +2405,29 @@ function App() {
 
   async function regenerate(event) {
     event.preventDefault();
-    setIsGenerating(true);
     setCopied("");
     setCheckedCompliance({});
-      setGenerationNote("");
+    setGenerationNote("");
+
+    const groundingResult = assessDraftGrounding(brief);
+    setDraftGroundingResult(groundingResult);
+
+    if (!groundingResult.passed) {
+      setHasGeneratedDraft(false);
+      setGenerationNote("Add the missing local detail before drafting.");
+      return;
+    }
+
+    setIsGenerating(true);
 
     try {
       const generatedDraft = await requestGeneratedDraft(brief, selectedTemplate);
       setDraft(normaliseDraft(brief, generatedDraft));
+      setHasGeneratedDraft(true);
       setGenerationNote("Grounded draft ready.");
     } catch (error) {
       setDraft(generateDraft(brief));
+      setHasGeneratedDraft(true);
       setGenerationNote(
         `Using built-in wording because the server was unavailable.`,
       );
@@ -2376,6 +2489,8 @@ function App() {
     setBrief(savedDraft.brief);
     setDraft(savedDraft.draft);
     setCheckedCompliance({});
+    setDraftGroundingResult(null);
+    setHasGeneratedDraft(true);
     setCopied("Draft loaded");
     window.setTimeout(() => setCopied(""), 1600);
   }
@@ -2396,6 +2511,8 @@ function App() {
     setCopied("");
     setCheckedCompliance({});
     setGenerationNote("");
+    setDraftGroundingResult(null);
+    setHasGeneratedDraft(false);
     setActiveStep("candidate-setup");
   }
 
@@ -2405,6 +2522,8 @@ function App() {
     setCopied("Example loaded");
     setCheckedCompliance({});
     setGenerationNote("");
+    setDraftGroundingResult(null);
+    setHasGeneratedDraft(false);
     setActiveStep("issue-briefing");
     window.scrollTo({ top: 0, behavior: "smooth" });
     window.setTimeout(() => setCopied(""), 1600);
@@ -2629,15 +2748,23 @@ function App() {
             </div>
 
             <div className="draft-output-stack">
-              <OutputBox
-                title={draft.title}
-                value={draft.primary}
-                onChange={(value) => setDraft((current) => ({ ...current, primary: value }))}
-                onCopy={() => copyText(draft.title, draft.primary)}
-                className="generated-draft-box"
-              />
-              <RealityCheckPanel items={draft.realityCheck} />
-              <ComplianceChecklist checkedItems={checkedCompliance} onToggle={toggleCompliance} />
+              {draftGroundingResult && !draftGroundingResult.passed ? (
+                <DraftGroundingGate result={draftGroundingResult} />
+              ) : !hasGeneratedDraft ? (
+                <DraftWaitingPanel />
+              ) : (
+                <>
+                  <OutputBox
+                    title={draft.title}
+                    value={draft.primary}
+                    onChange={(value) => setDraft((current) => ({ ...current, primary: value }))}
+                    onCopy={() => copyText(draft.title, draft.primary)}
+                    className="generated-draft-box"
+                  />
+                  <RealityCheckPanel items={draft.realityCheck} />
+                  <ComplianceChecklist checkedItems={checkedCompliance} onToggle={toggleCompliance} />
+                </>
+              )}
             </div>
           </div>
 
