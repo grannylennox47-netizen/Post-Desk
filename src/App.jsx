@@ -297,8 +297,8 @@ const smartImageRules = [
 ];
 
 const workflowSteps = [
-  { id: "candidate-setup", number: 1, label: "Ground it" },
-  { id: "issue-briefing", number: 2, label: "Add detail" },
+  { id: "candidate-setup", number: 1, label: "Start here" },
+  { id: "issue-briefing", number: 2, label: "Talk it through" },
   { id: "content-drafting", number: 3, label: "Draft it" },
   { id: "tone-refinement", number: 4, label: "Improve it" },
   { id: "visuals-assets", number: 5, label: "Add photos" },
@@ -812,27 +812,27 @@ function buildGroundingChecks(brief) {
 const claimCategories = {
   "local-problem": {
     label: "Local problem",
-    note: "Pin down the place, the evidence, and what can actually be chased.",
+    note: "Let’s pin down where it is, what has happened, and what can actually be chased.",
   },
   "opinion-proposal": {
     label: "Opinion or proposal",
-    note: "Separate the opinion from the evidence. Name the practical proposal and any trade-offs.",
+    note: "There may be a useful post here. First, let’s separate the opinion from the evidence.",
   },
   update: {
     label: "Local update",
-    note: "Check the source, the timing, and whether the change can be verified.",
+    note: "Let’s make sure the source, timing, and confirmed facts are clear.",
   },
   celebration: {
     label: "Celebration or thanks",
-    note: "Keep the praise specific. Name what happened, where, and who should be credited.",
+    note: "Good. Keep the praise specific: what happened, where, and who deserves the credit?",
   },
   consultation: {
     label: "Consultation",
-    note: "Say who is asking, what decision is being made, and how people can respond.",
+    note: "Let’s make it easy to understand who is asking, what is being decided, and how people can respond.",
   },
   hearsay: {
     label: "Rumour or hearsay",
-    note: "Pause before posting. Identify the source and confirm what can actually be verified.",
+    note: "Worth pausing here. What is the original source, and what can actually be confirmed?",
   },
 };
 
@@ -894,37 +894,37 @@ function assessTopicGrounding(brief) {
 
   const checksByCategory = {
     "local-problem": [
-      { label: "A specific place", ok: hasPlace },
-      { label: "Evidence or reported incidents", ok: hasEvidence },
-      { label: "A council service or organisation responsible", ok: hasResponsibleRoute },
-      { label: "A practical action that could be requested", ok: hasAction },
+      { label: "Where exactly is it?", ok: hasPlace },
+      { label: "What has been seen or reported?", ok: hasEvidence },
+      { label: "Who is likely to deal with it?", ok: hasResponsibleRoute },
+      { label: "What could reasonably be asked for?", ok: hasAction },
     ],
     "opinion-proposal": [
-      { label: "A clear claim or proposal", ok: issue.length >= 16 },
-      { label: "Evidence supporting the claim", ok: hasEvidence },
-      { label: "Trade-offs or alternatives considered", ok: whyItMatters.length >= 20 },
-      { label: "A practical next step", ok: hasAction },
+      { label: "What is the actual idea or claim?", ok: issue.length >= 16 },
+      { label: "What evidence supports it?", ok: hasEvidence },
+      { label: "What are the trade-offs or alternatives?", ok: whyItMatters.length >= 20 },
+      { label: "What would a sensible next step be?", ok: hasAction },
     ],
     update: [
-      { label: "A source for the update", ok: hasEvidence },
-      { label: "A clear timeline or date", ok: hasTimeline },
-      { label: "Something that can be verified", ok: hasEvidence && (hasPlace || hasResponsibleRoute) },
+      { label: "Where did the update come from?", ok: hasEvidence },
+      { label: "When did it happen?", ok: hasTimeline },
+      { label: "What can be checked?", ok: hasEvidence && (hasPlace || hasResponsibleRoute) },
     ],
     celebration: [
-      { label: "A specific person, group, or event", ok: issue.length >= 12 },
-      { label: "A real place", ok: hasPlace },
-      { label: "A checkable detail", ok: hasEvidence },
+      { label: "Who or what are you thanking?", ok: issue.length >= 12 },
+      { label: "Where did it happen?", ok: hasPlace },
+      { label: "What detail makes it real?", ok: hasEvidence },
     ],
     consultation: [
-      { label: "The decision or proposal", ok: issue.length >= 16 },
-      { label: "The organisation responsible", ok: hasResponsibleRoute },
-      { label: "A deadline or timeline", ok: hasTimeline },
-      { label: "How people can respond", ok: Boolean(callToAction) },
+      { label: "What is being decided?", ok: issue.length >= 16 },
+      { label: "Who is asking?", ok: hasResponsibleRoute },
+      { label: "When do people need to reply?", ok: hasTimeline },
+      { label: "How can people respond?", ok: Boolean(callToAction) },
     ],
     hearsay: [
-      { label: "The original source", ok: hasEvidence },
-      { label: "A way to verify the claim", ok: Boolean(practicalNextStep) },
-      { label: "The organisation responsible", ok: hasResponsibleRoute },
+      { label: "Where did this come from originally?", ok: hasEvidence },
+      { label: "How could it be checked?", ok: Boolean(practicalNextStep) },
+      { label: "Who would know for certain?", ok: hasResponsibleRoute },
     ],
   };
 
@@ -945,19 +945,23 @@ function TopicGroundingDesk({ brief, onChange }) {
     <div className="topic-grounding-desk">
       <label className="topic-entry-field">
         <span>What would you like to write about?</span>
+        <small>Don’t worry about getting it right yet. Just tell Post Desk what’s on your mind.</small>
         <textarea
           value={brief.issue}
           onChange={(event) => onChange("issue", event.target.value)}
-          placeholder="Describe the issue, update, idea, event, or question in your own words."
+          placeholder="Start wherever feels easiest."
         />
       </label>
-      <p className="topic-examples">
-        A local problem · an idea · an update · an event · a question · something you noticed
-      </p>
+      <ul className="topic-examples">
+        <li>A local issue you have noticed</li>
+        <li>An idea you would like to explore</li>
+        <li>An event, update, or council decision</li>
+        <li>Something residents keep mentioning</li>
+      </ul>
       {brief.issue.trim() && (
         <aside className={`topic-assessment ${result.passed ? "passed" : ""}`}>
           <div className="topic-assessment-heading">
-            <span>Grounding check</span>
+            <span>A quick note</span>
             <strong>{result.categoryInfo.label}</strong>
           </div>
           <p>{result.categoryInfo.note}</p>
@@ -971,8 +975,8 @@ function TopicGroundingDesk({ brief, onChange }) {
           </ul>
           <small>
             {result.passed
-              ? "This is grounded enough to build on."
-              : "That is fine. Add the missing detail on the next screen before drafting."}
+              ? "Good. That gives us something solid to work with."
+              : "That is fine. A few more details will make this easier to write well."}
           </small>
         </aside>
       )}
@@ -985,12 +989,12 @@ function GroundingCheck({ brief }) {
 
   return (
     <div className="grounding-check" aria-label="Grounding check">
-      <p><strong>Keep it grounded:</strong> do not make the issue bigger than the evidence.</p>
+      <p><strong>A few useful questions:</strong> do not make the issue bigger than the evidence.</p>
       <div className="grounding-items">
         {result.checks.map((check) => (
           <span className={check.ok ? "grounding-item ok" : "grounding-item"} key={check.label}>
             <b>{check.label}</b>
-            {check.ok ? "Covered." : "Add this before drafting."}
+            {check.ok ? "Yes." : "Worth adding before you write."}
           </span>
         ))}
       </div>
@@ -1012,9 +1016,9 @@ function DraftGroundingGate({ result }) {
 
   return (
     <section className="draft-grounding-gate" aria-label="Grounding check">
-      <p className="gate-kicker">Grounding check</p>
+      <p className="gate-kicker">Before we write</p>
       <h3>{gateHeading}</h3>
-      <p>Post Desk cannot identify:</p>
+      <p>A few details are still missing:</p>
       <ul>
         {result.checks.map((check) => (
           <li className={check.ok ? "ok" : ""} key={check.label}>
@@ -1024,7 +1028,7 @@ function DraftGroundingGate({ result }) {
         ))}
       </ul>
       <p className="gate-close">
-        Please add more detail before drafting. It is fine not to write the post yet.
+        Add what you know before drafting. It is completely fine not to write the post yet.
       </p>
     </section>
   );
@@ -2700,9 +2704,9 @@ function App() {
       <form className="editor-flow" onSubmit={regenerate}>
         <section className="panel workflow-section" id="candidate-setup" hidden={activeStep !== "candidate-setup"}>
           <div className="section-heading">
-            <p className="step-label">Claim desk</p>
-            <h2>Ground your post</h2>
-            <p>Start with the thing you want to say. Post Desk will help you work out what needs checking.</p>
+            <p className="step-label">Start here</p>
+            <h2>Talk me through it</h2>
+            <p>Begin with the thing on your mind. We can make it more specific as we go.</p>
           </div>
 
           <TopicGroundingDesk brief={brief} onChange={updateBrief} />
@@ -2711,8 +2715,8 @@ function App() {
           {showExamplePrompt && <ExamplePrompt onLoad={loadExampleBrief} />}
 
           <details className="advanced-details identity-settings">
-            <summary>Optional drafting details</summary>
-            <p className="details-intro">Add these when you want Post Desk to shape the wording for a particular person or area.</p>
+            <summary>Add a name, area, or tone later</summary>
+            <p className="details-intro">Useful when you want the final wording shaped for a particular person or area.</p>
             <div className="setup-brief">
               <div className="setup-fields">
                 <div className="two-column">
@@ -2744,13 +2748,13 @@ function App() {
           </details>
 
           <aside className="reality-reminder-card">
-            <strong>Before you post</strong>
+            <strong>A note from the editor</strong>
             <p>Do not make the issue bigger than the evidence.</p>
-            <span>Specific. Evidenced. Actionable.</span>
+            <span>A real place. A clear point. A sensible next step.</span>
           </aside>
 
           <details className="advanced-details wording-settings">
-            <summary>Optional wording notes</summary>
+            <summary>Adjust the wording style later</summary>
             <div className="setup-notes-details" aria-label="Wording notes">
               <details className="setup-note-accordion sounds-natural-card">
                 <summary>Sounds natural</summary>
@@ -2770,9 +2774,9 @@ function App() {
 
         <section className="panel workflow-section" id="issue-briefing" hidden={activeStep !== "issue-briefing"}>
           <div className="section-heading">
-            <p className="step-label">Evidence desk</p>
-            <h2>Add the real-world detail</h2>
-            <p>What can somebody actually see, hear, report, or verify?</p>
+            <p className="step-label">Let’s make it more specific</p>
+            <h2>What do we know so far?</h2>
+            <p>Add the details you would want to check before saying this in public.</p>
           </div>
 
           <div className="issue-desk">
@@ -2782,18 +2786,18 @@ function App() {
                 <p>{brief.issue || "Add your topic on the first screen."}</p>
               </div>
               <label className="issue-evidence-field">
-                <span>What is the evidence?</span>
+                <span>What has actually happened?</span>
                 <textarea
                   value={brief.localExample}
                   onChange={(event) => updateBrief("localExample", event.target.value)}
-                  placeholder="Add what was seen, reported, confirmed, or sent to you. Do not fill gaps with assumptions."
+                  placeholder="What was seen, reported, confirmed, or sent to you? It is fine to leave gaps where you are not sure."
                 />
               </label>
               <GroundingCheck brief={brief} />
             </div>
 
             <details className="advanced-details issue-details">
-              <summary>Useful context if it helps</summary>
+              <summary>A bit more context, if useful</summary>
               <div className="issue-detail-grid">
                 <Field label="People affected">
                   <textarea value={brief.whoAffected || ""} onChange={(event) => updateBrief("whoAffected", event.target.value)} />
