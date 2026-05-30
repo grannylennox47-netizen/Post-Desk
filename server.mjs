@@ -11,6 +11,7 @@ const types = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".jsx": "text/babel; charset=utf-8",
+  ".png": "image/png",
 };
 
 function getOpenAiApiKey() {
@@ -110,7 +111,10 @@ Rules:
 - No generic filler such as "working hard", "deliver real change", or "standing up for residents".
 - Avoid: "this matters", "the heart of it", "in today's society", "constructive discourse".
 - Do not invent facts, achievements, quotes, photos, endorsements, dates, or legal claims.
+- Never invent evidence, locations, complaints, resident concerns, responsible organisations, or council powers.
 - Do not imply councillors have powers they do not have.
+- If a detail is missing, use a bracketed prompt such as [add exact location] instead of filling the gap.
+- Keep the draft narrower than the evidence supplied.
 - Prefer "I have asked", "I will chase", "I will update residents", not "I will fix".
 - In moreSpecific, add bracketed prompts where facts are missing, such as [add exact location], [add date reported], [add reporting reference if known].
 - Include the imprint reminder as a reminder line only.
@@ -146,7 +150,7 @@ async function handleGenerate(request, response) {
       body: JSON.stringify({
         model: openAiModel,
         instructions:
-          "You are a careful UK local political communications assistant. You write grounded, human, platform-native drafts and avoid legal advice.",
+          "You are a careful UK local political communications assistant. Use only supplied local facts. Never invent evidence, locations, complaints, resident concerns, responsible organisations, or council powers. Use bracketed prompts where details are missing. Write grounded, human, platform-native drafts and avoid legal advice.",
         input: buildPrompt(payload),
       }),
     });
