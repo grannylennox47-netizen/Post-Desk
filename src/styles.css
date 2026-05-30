@@ -802,14 +802,14 @@ textarea:focus {
   gap: 18px;
   align-items: center;
   max-width: 900px;
-  margin-bottom: 28px;
-  border-left: 4px solid #1c3f35;
-  border-radius: 18px;
+  margin-bottom: 22px;
+  border-left: 3px solid rgba(28, 63, 53, 0.64);
+  border-radius: 13px;
   background:
     linear-gradient(135deg, rgba(238, 248, 242, 0.92), rgba(255, 252, 244, 0.9)),
     #f7fbf6;
-  padding: 18px 20px;
-  box-shadow: 0 16px 36px rgba(54, 51, 39, 0.08);
+  padding: 15px 17px;
+  box-shadow: 0 10px 24px rgba(54, 51, 39, 0.055);
 }
 
 .example-prompt-card span {
@@ -853,12 +853,26 @@ textarea:focus {
   font-weight: 800;
 }
 
+.topic-entry-field small {
+  max-width: 660px;
+  color: #65736c;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .topic-entry-field textarea {
   width: 100%;
-  min-height: 152px;
-  border: 1px solid rgba(28, 63, 53, 0.16);
-  border-radius: 17px;
-  background: rgba(255, 254, 250, 0.94);
+  min-height: 128px;
+  border: 1px solid rgba(28, 63, 53, 0.13);
+  border-radius: 14px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      rgba(28, 63, 53, 0.065) 32px
+    ),
+    rgba(255, 254, 250, 0.94);
   padding: 16px 17px;
   color: #1f3028;
   font-size: 1.04rem;
@@ -873,10 +887,20 @@ textarea:focus {
 }
 
 .topic-examples {
-  margin: 9px 2px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 20px;
+  margin: 11px 2px 0;
+  padding: 0;
   color: #68756f;
-  font-size: 0.8rem;
+  font-size: 0.79rem;
   line-height: 1.5;
+  list-style: none;
+}
+
+.topic-examples li::before {
+  content: "• ";
+  color: #8f7442;
 }
 
 .topic-assessment {
@@ -952,7 +976,16 @@ textarea:focus {
 .identity-settings,
 .wording-settings {
   max-width: 900px;
-  margin-top: 16px;
+  margin-top: 13px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.identity-settings > summary,
+.wording-settings > summary {
+  color: #526159;
+  font-size: 0.87rem;
 }
 
 .identity-settings .setup-brief {
@@ -2623,12 +2656,14 @@ input[type="file"] {
   }
 
   .topic-entry-field textarea {
-    min-height: 132px;
+    min-height: 112px;
     padding: 14px;
     font-size: 0.98rem;
   }
 
   .topic-examples {
+    grid-template-columns: 1fr;
+    gap: 2px;
     font-size: 0.74rem;
   }
 
