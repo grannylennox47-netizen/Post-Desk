@@ -297,8 +297,8 @@ const smartImageRules = [
 ];
 
 const workflowSteps = [
-  { id: "candidate-setup", number: 1, label: "Stay local" },
-  { id: "issue-briefing", number: 2, label: "What happened?" },
+  { id: "candidate-setup", number: 1, label: "Ground it" },
+  { id: "issue-briefing", number: 2, label: "Add detail" },
   { id: "content-drafting", number: 3, label: "Draft it" },
   { id: "tone-refinement", number: 4, label: "Improve it" },
   { id: "visuals-assets", number: 5, label: "Add photos" },
@@ -809,17 +809,188 @@ function buildGroundingChecks(brief) {
   ];
 }
 
+const claimCategories = {
+  "local-problem": {
+    label: "Local problem",
+    note: "Pin down the place, the evidence, and what can actually be chased.",
+  },
+  "opinion-proposal": {
+    label: "Opinion or proposal",
+    note: "Separate the opinion from the evidence. Name the practical proposal and any trade-offs.",
+  },
+  update: {
+    label: "Local update",
+    note: "Check the source, the timing, and whether the change can be verified.",
+  },
+  celebration: {
+    label: "Celebration or thanks",
+    note: "Keep the praise specific. Name what happened, where, and who should be credited.",
+  },
+  consultation: {
+    label: "Consultation",
+    note: "Say who is asking, what decision is being made, and how people can respond.",
+  },
+  hearsay: {
+    label: "Rumour or hearsay",
+    note: "Pause before posting. Identify the source and confirm what can actually be verified.",
+  },
+};
+
+function classifyTopic(brief) {
+  const text = `${brief.issue || ""} ${brief.localExample || ""}`.toLowerCase();
+
+  if (/\b(rumou?r|apparently|supposedly|someone said|i heard|hearsay|unconfirmed)\b/.test(text)) {
+    return "hearsay";
+  }
+
+  if (/\b(consultation|consulting|survey|have your say|feedback|views on|respond by)\b/.test(text)) {
+    return "consultation";
+  }
+
+  if (/\b(thank|thanks|congratulations|well done|opened|reopened|award|celebrat)\b/.test(text)) {
+    return "celebration";
+  }
+
+  if (/\b(update|now fixed|repaired|completed|closed|reopened|latest|work has started)\b/.test(text)) {
+    return "update";
+  }
+
+  if (/\b(i think|should|could|proposal|propose|idea|would like|nowadays|in general)\b/.test(text)) {
+    return "opinion-proposal";
+  }
+
+  return "local-problem";
+}
+
+function assessTopicGrounding(brief) {
+  const category = classifyTopic(brief);
+  const issue = (brief.issue || "").trim();
+  const localExample = (brief.localExample || "").trim();
+  const practicalNextStep = (brief.practicalNextStep || "").trim();
+  const callToAction = (brief.callToAction || "").trim();
+  const whyItMatters = (brief.whyItMatters || "").trim();
+  const combined = `${issue} ${localExample}`.toLowerCase();
+  const placePattern =
+    /\b(near|outside|opposite|beside|by|at|around|next to|junction|road|street|station|school|park|library|market|crossing|estate|avenue|lane|close|drive|high street|square|hall|stop|ward|village|town)\b/i;
+  const localServicePattern =
+    /\b(bin|rubbish|litter|fly.?tip|pothole|road|pavement|street light|lighting|crossing|traffic|parking|bus stop|bus|library|park|playground|drain|flood|graffiti|antisocial|anti-social|speeding|police|nhs|gp|doctor|hospital|school|housing|landlord|utility|council|highways|authority|service|team)\b/i;
+  const evidencePattern =
+    /\b(report|reported|reference|incident|near miss|complaint|photo|residents?|parents?|commuters?|businesses?|noticed|seen|sent|source|confirmed|this month|this week|since|after \d|before \d|\d+)\b/i;
+  const datePattern =
+    /\b(today|yesterday|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}[/-]\d{1,2}|\d{1,2}(st|nd|rd|th))\b/i;
+  const actionPattern =
+    /\b(check|chase|report|request|ask|inspect|inspection|repair|review|timescale|date|reference|update|enforce|clear|clean|replace|fix|respond|reply|send|survey|consult)\b/i;
+  const hasPlace = placePattern.test(combined) || Boolean(brief.ward?.trim());
+  const hasEvidence = localExample.length >= 24 || evidencePattern.test(combined);
+  const hasResponsibleRoute =
+    localServicePattern.test(combined) ||
+    /\b(council|police|nhs|landlord|utility|authority|service|team|organisation|highways)\b/i.test(
+      practicalNextStep,
+    );
+  const hasAction =
+    actionPattern.test(`${practicalNextStep} ${callToAction}`) ||
+    (hasEvidence && localServicePattern.test(combined));
+  const hasTimeline = datePattern.test(combined) || datePattern.test(practicalNextStep);
+
+  const checksByCategory = {
+    "local-problem": [
+      { label: "A specific place", ok: hasPlace },
+      { label: "Evidence or reported incidents", ok: hasEvidence },
+      { label: "A council service or organisation responsible", ok: hasResponsibleRoute },
+      { label: "A practical action that could be requested", ok: hasAction },
+    ],
+    "opinion-proposal": [
+      { label: "A clear claim or proposal", ok: issue.length >= 16 },
+      { label: "Evidence supporting the claim", ok: hasEvidence },
+      { label: "Trade-offs or alternatives considered", ok: whyItMatters.length >= 20 },
+      { label: "A practical next step", ok: hasAction },
+    ],
+    update: [
+      { label: "A source for the update", ok: hasEvidence },
+      { label: "A clear timeline or date", ok: hasTimeline },
+      { label: "Something that can be verified", ok: hasEvidence && (hasPlace || hasResponsibleRoute) },
+    ],
+    celebration: [
+      { label: "A specific person, group, or event", ok: issue.length >= 12 },
+      { label: "A real place", ok: hasPlace },
+      { label: "A checkable detail", ok: hasEvidence },
+    ],
+    consultation: [
+      { label: "The decision or proposal", ok: issue.length >= 16 },
+      { label: "The organisation responsible", ok: hasResponsibleRoute },
+      { label: "A deadline or timeline", ok: hasTimeline },
+      { label: "How people can respond", ok: Boolean(callToAction) },
+    ],
+    hearsay: [
+      { label: "The original source", ok: hasEvidence },
+      { label: "A way to verify the claim", ok: Boolean(practicalNextStep) },
+      { label: "The organisation responsible", ok: hasResponsibleRoute },
+    ],
+  };
+
+  const checks = checksByCategory[category];
+
+  return {
+    category,
+    categoryInfo: claimCategories[category],
+    checks,
+    passed: checks.every((check) => check.ok),
+  };
+}
+
+function TopicGroundingDesk({ brief, onChange }) {
+  const result = assessTopicGrounding(brief);
+
+  return (
+    <div className="topic-grounding-desk">
+      <label className="topic-entry-field">
+        <span>What would you like to write about?</span>
+        <textarea
+          value={brief.issue}
+          onChange={(event) => onChange("issue", event.target.value)}
+          placeholder="Describe the issue, update, idea, event, or question in your own words."
+        />
+      </label>
+      <p className="topic-examples">
+        A local problem · an idea · an update · an event · a question · something you noticed
+      </p>
+      {brief.issue.trim() && (
+        <aside className={`topic-assessment ${result.passed ? "passed" : ""}`}>
+          <div className="topic-assessment-heading">
+            <span>Grounding check</span>
+            <strong>{result.categoryInfo.label}</strong>
+          </div>
+          <p>{result.categoryInfo.note}</p>
+          <ul>
+            {result.checks.map((check) => (
+              <li className={check.ok ? "ok" : ""} key={check.label}>
+                <b>{check.ok ? "✓" : "□"}</b>
+                {check.label}
+              </li>
+            ))}
+          </ul>
+          <small>
+            {result.passed
+              ? "This is grounded enough to build on."
+              : "That is fine. Add the missing detail on the next screen before drafting."}
+          </small>
+        </aside>
+      )}
+    </div>
+  );
+}
+
 function GroundingCheck({ brief }) {
-  const checks = buildGroundingChecks(brief);
+  const result = assessTopicGrounding(brief);
 
   return (
     <div className="grounding-check" aria-label="Grounding check">
       <p><strong>Keep it grounded:</strong> do not make the issue bigger than the evidence.</p>
       <div className="grounding-items">
-        {checks.map((check) => (
+        {result.checks.map((check) => (
           <span className={check.ok ? "grounding-item ok" : "grounding-item"} key={check.label}>
             <b>{check.label}</b>
-            {check.text}
+            {check.ok ? "Covered." : "Add this before drafting."}
           </span>
         ))}
       </div>
@@ -828,77 +999,21 @@ function GroundingCheck({ brief }) {
 }
 
 function assessDraftGrounding(brief) {
-  const issue = (brief.issue || "").trim();
-  const localExample = (brief.localExample || "").trim();
-  const practicalNextStep = (brief.practicalNextStep || "").trim();
-  const callToAction = (brief.callToAction || "").trim();
-  const combined = `${issue} ${localExample}`.toLowerCase();
-  const placePattern =
-    /\b(near|outside|opposite|beside|by|at|around|next to|junction|road|street|station|school|park|library|market|crossing|estate|avenue|lane|close|drive|high street|square|hall|stop|ward)\b/i;
-  const localServicePattern =
-    /\b(bin|rubbish|litter|fly.?tip|pothole|road|pavement|street light|lighting|crossing|traffic|parking|bus stop|bus|library|park|playground|drain|flood|graffiti|antisocial|anti-social|speeding|police|nhs|gp|doctor|hospital|school|housing|landlord|utility|council|highways|authority|service|team)\b/i;
-  const evidencePattern =
-    /\b(report|reported|reference|incident|near miss|complaint|photo|residents?|parents?|commuters?|businesses?|noticed|seen|sent|this month|this week|since|after \d|before \d|\d+)\b/i;
-  const generalOpinionPattern =
-    /\b(i think|nowadays|society|people spend too much time|everyone|always|never|these days|in general)\b/i;
-  const actionPattern =
-    /\b(check|chase|report|request|ask|inspect|inspection|repair|review|timescale|date|reference|update|enforce|clear|clean|replace|fix)\b/i;
-
-  const hasPlace = placePattern.test(combined);
-  const hasEvidence =
-    localExample.length >= 24 || evidencePattern.test(combined);
-  const hasSpecificProblem =
-    issue.length >= 8 &&
-    !(
-      generalOpinionPattern.test(issue) &&
-      !hasPlace &&
-      !localServicePattern.test(issue) &&
-      !hasEvidence
-    ) &&
-    (hasPlace || localServicePattern.test(combined) || hasEvidence);
-  const hasResponsibleRoute =
-    localServicePattern.test(combined) ||
-    /\b(council|police|nhs|landlord|utility|authority|service|team|organisation|highways)\b/i.test(
-      practicalNextStep,
-    );
-  const hasPracticalAction =
-    actionPattern.test(`${practicalNextStep} ${callToAction}`) ||
-    (hasEvidence && localServicePattern.test(combined));
-
-  const checks = [
-    {
-      label: "A specific place",
-      ok: hasPlace,
-    },
-    {
-      label: "A specific local problem",
-      ok: hasSpecificProblem,
-    },
-    {
-      label: "Evidence or reported incidents",
-      ok: hasEvidence,
-    },
-    {
-      label: "A council service or organisation responsible",
-      ok: hasResponsibleRoute,
-    },
-    {
-      label: "A practical action that could be requested",
-      ok: hasPracticalAction,
-    },
-  ];
-
-  return {
-    passed: checks.every((check) => check.ok),
-    checks,
-  };
+  return assessTopicGrounding(brief);
 }
 
 function DraftGroundingGate({ result }) {
+  const gateHeading =
+    result.category === "hearsay"
+      ? "⚠ This needs checking before it becomes a post."
+      : result.category === "opinion-proposal"
+        ? "⚠ This looks more like an opinion or proposal than a grounded post."
+        : "⚠ This needs more grounding before it becomes a post.";
+
   return (
     <section className="draft-grounding-gate" aria-label="Grounding check">
       <p className="gate-kicker">Grounding check</p>
-      <h3>⚠ This looks more like a general opinion than a local issue.</h3>
+      <h3>{gateHeading}</h3>
       <p>Post Desk cannot identify:</p>
       <ul>
         {result.checks.map((check) => (
@@ -2544,7 +2659,7 @@ function App() {
             </p>
             <h1>Post desk</h1>
             <p className="lede">
-              Ground the issue before you write.
+              Before you post, know what you are claiming.
             </p>
           </div>
           <div className="topbar-actions">
@@ -2585,82 +2700,94 @@ function App() {
       <form className="editor-flow" onSubmit={regenerate}>
         <section className="panel workflow-section" id="candidate-setup" hidden={activeStep !== "candidate-setup"}>
           <div className="section-heading">
-            <p className="step-label">Section 1</p>
-            <h2>Stay local</h2>
-            <p>Set the basics, then keep the post grounded in what can be checked.</p>
+            <p className="step-label">Claim desk</p>
+            <h2>Ground your post</h2>
+            <p>Start with the thing you want to say. Post Desk will help you work out what needs checking.</p>
           </div>
+
+          <TopicGroundingDesk brief={brief} onChange={updateBrief} />
+          <StepControls activeStep={activeStep} onStepChange={changeStep} />
 
           {showExamplePrompt && <ExamplePrompt onLoad={loadExampleBrief} />}
 
-          <div className="setup-brief">
-            <div className="setup-fields">
-              <div className="two-column">
-                <Field label="Name for post perspective (optional)">
-                  <input value={brief.candidateName} onChange={(event) => updateBrief("candidateName", event.target.value)} />
-                  <small className="field-hint">Used only for first-person wording and imprint examples.</small>
-                </Field>
-                <Field label="Ward">
-                  <input value={brief.ward} onChange={(event) => updateBrief("ward", event.target.value)} />
-                </Field>
-              </div>
-              <div className="two-column">
-                <Field label="Party">
-                  <input value={brief.party} onChange={(event) => updateBrief("party", event.target.value)} />
-                </Field>
-                <Field label="Tone">
-                  <select value={brief.tone} onChange={(event) => updateBrief("tone", event.target.value)}>
-                    <option>calm</option>
-                    <option>straightforward</option>
-                    <option>practical</option>
-                    <option>direct</option>
-                    <option>neighbourly</option>
-                  </select>
-                  <small className="field-hint">{toneDescriptions[brief.tone]}</small>
-                </Field>
+          <details className="advanced-details identity-settings">
+            <summary>Optional drafting details</summary>
+            <p className="details-intro">Add these when you want Post Desk to shape the wording for a particular person or area.</p>
+            <div className="setup-brief">
+              <div className="setup-fields">
+                <div className="two-column">
+                  <Field label="Name for post perspective (optional)">
+                    <input value={brief.candidateName} onChange={(event) => updateBrief("candidateName", event.target.value)} />
+                    <small className="field-hint">Used only for first-person wording and imprint examples.</small>
+                  </Field>
+                  <Field label="Area or ward (optional)">
+                    <input value={brief.ward} onChange={(event) => updateBrief("ward", event.target.value)} />
+                  </Field>
+                </div>
+                <div className="two-column">
+                  <Field label="Party or group (optional)">
+                    <input value={brief.party} onChange={(event) => updateBrief("party", event.target.value)} />
+                  </Field>
+                  <Field label="Tone">
+                    <select value={brief.tone} onChange={(event) => updateBrief("tone", event.target.value)}>
+                      <option>calm</option>
+                      <option>straightforward</option>
+                      <option>practical</option>
+                      <option>direct</option>
+                      <option>neighbourly</option>
+                    </select>
+                    <small className="field-hint">{toneDescriptions[brief.tone]}</small>
+                  </Field>
+                </div>
               </div>
             </div>
-          </div>
-
-          <StepControls activeStep={activeStep} onStepChange={changeStep} />
+          </details>
 
           <aside className="reality-reminder-card">
-            <strong>Before you write</strong>
+            <strong>Before you post</strong>
             <p>Do not make the issue bigger than the evidence.</p>
-            <span>Place. Problem. What can be chased.</span>
+            <span>Specific. Evidenced. Actionable.</span>
           </aside>
 
-          <div className="setup-notes-details" aria-label="Wording notes">
-            <details className="setup-note-accordion sounds-natural-card">
-              <summary>Sounds natural</summary>
-              <p>“{brief.profile.naturalPhrases}”</p>
-            </details>
-            <details className="setup-note-accordion avoid-wording-card">
-              <summary>Avoid wording</summary>
-              <textarea value={brief.profile.phrasesToAvoid || ""} onChange={(event) => updateProfile("phrasesToAvoid", event.target.value)} />
-            </details>
-            <details className="setup-note-accordion preferred-style-card">
-              <summary>Preferred wording style</summary>
-              <textarea value={brief.profile.preferredWordingStyle} onChange={(event) => updateProfile("preferredWordingStyle", event.target.value)} />
-            </details>
-          </div>
+          <details className="advanced-details wording-settings">
+            <summary>Optional wording notes</summary>
+            <div className="setup-notes-details" aria-label="Wording notes">
+              <details className="setup-note-accordion sounds-natural-card">
+                <summary>Sounds natural</summary>
+                <p>“{brief.profile.naturalPhrases}”</p>
+              </details>
+              <details className="setup-note-accordion avoid-wording-card">
+                <summary>Avoid wording</summary>
+                <textarea value={brief.profile.phrasesToAvoid || ""} onChange={(event) => updateProfile("phrasesToAvoid", event.target.value)} />
+              </details>
+              <details className="setup-note-accordion preferred-style-card">
+                <summary>Preferred wording style</summary>
+                <textarea value={brief.profile.preferredWordingStyle} onChange={(event) => updateProfile("preferredWordingStyle", event.target.value)} />
+              </details>
+            </div>
+          </details>
         </section>
 
         <section className="panel workflow-section" id="issue-briefing" hidden={activeStep !== "issue-briefing"}>
           <div className="section-heading">
-            <p className="step-label">Issue desk</p>
-            <h2>What happened?</h2>
-            <p>Start with what residents can actually see, hear, or report.</p>
+            <p className="step-label">Evidence desk</p>
+            <h2>Add the real-world detail</h2>
+            <p>What can somebody actually see, hear, report, or verify?</p>
           </div>
 
           <div className="issue-desk">
             <div className="issue-core-flow">
-              <label className="issue-headline-field">
-                <span>Problem statement</span>
-                <input value={brief.issue} onChange={(event) => updateBrief("issue", event.target.value)} />
-              </label>
+              <div className="issue-working-title">
+                <span>Current topic</span>
+                <p>{brief.issue || "Add your topic on the first screen."}</p>
+              </div>
               <label className="issue-evidence-field">
-                <span>What have residents actually seen or said?</span>
-                <textarea value={brief.localExample} onChange={(event) => updateBrief("localExample", event.target.value)} />
+                <span>What is the evidence?</span>
+                <textarea
+                  value={brief.localExample}
+                  onChange={(event) => updateBrief("localExample", event.target.value)}
+                  placeholder="Add what was seen, reported, confirmed, or sent to you. Do not fill gaps with assumptions."
+                />
               </label>
               <GroundingCheck brief={brief} />
             </div>
